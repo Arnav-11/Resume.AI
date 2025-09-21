@@ -1,0 +1,28 @@
+# Flask and web framework dependencies
+Flask==2.3.3
+Werkzeug==2.3.7
+gunicorn==21.2.0
+
+# File processing libraries
+PyPDF2==3.0.1
+python-docx==0.8.11
+
+# Text processing and NLP
+nltk==3.8.1
+scikit-learn==1.3.2
+
+# Data handling
+pandas==2.1.3
+numpy==1.24.3
+
+# Hugging Face Integration
+huggingface-hub==0.19.4
+
+# Environment variables management
+python-dotenv==1.0.0
+
+# Additional utilities
+Pillow==10.1.0
+requests==2.31.0
+beautifulsoup4==4.12.2
+cryptography==41.0.7

@@ -1,0 +1,523 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Complete{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    
+    {% if result.success %}
+        <!-- Success Header -->
+        <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+            <i class="fas fa-check-circle fa-2x me-3"></i>
+            <div>
+                <h4 class="alert-heading mb-0">Analysis Complete!</h4>
+                <p class="mb-0">File processed: <strong>{{ result.filename }}</strong></p>
+            </div>
+        </div>
+
+        <!-- AI Writing Coach Section -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0"><i class="fas fa-robot text-primary me-2"></i>AI Writing Coach</h4>
+            </div>
+            <div class="card-body p-4">
+                <h5 class="card-title">Grammar & Style Feedback</h5>
+                <p class="text-muted small">Suggestions from our AI to improve the clarity and professionalism of your resume.</p>
+                <div class="ai-feedback-box mt-3">
+                    {% if result.ai_feedback %}
+                        <div style="white-space: pre-line;">{{ result.ai_feedback }}</div>
+                    {% else %}
+                        <p class="text-secondary">AI feedback is currently unavailable.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Bullet Point Enhancement Section (Conditional) -->
+        {% if result.enhanced_bullets %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0"><i class="fas fa-edit text-primary me-2"></i>Impactful Bullet Points</h4>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted small">AI suggestions to transform your experience points into powerful achievements.</p>
+                {% for item in result.enhanced_bullets %}
+                    <div class="suggestion-pair my-4">
+                        <p class="mb-1"><strong class="text-secondary">Original:</strong></p>
+                        <p class="text-muted ps-3 border-start border-2"><em>{{ item.original }}</em></p>
+                        
+                        <p class="mb-1"><strong class="text-success">Suggestion:</strong></p>
+                        <p class="fw-bold ps-3 border-start border-2 border-success">{{ item.suggestion }}</p>
+                    </div>
+                    {% if not loop.last %}<hr>{% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- JOB DESCRIPTION ANALYSIS (Conditional) -->
+        {% if result.job_comparison %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0"><i class="fas fa-bullseye text-primary me-2"></i>Job Match Analysis</h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-lg-4 text-center mb-4 mb-lg-0">
+                        <div style="position: relative; width: 200px; height: 200px; margin: 0 auto;">
+                            <canvas id="matchScoreChart" width="200" height="200" data-score="{{ result.job_comparison.match_score | default(0) }}"></canvas>
+                        </div>
+                        <h5 class="mt-3">Job Match Score</h5>
+                        <p class="text-muted">{{ result.job_comparison.match_score | default(0) }}% compatibility</p>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="mb-4">
+                            <h5><i class="fas fa-check-circle text-success me-2"></i>Matching Keywords ({{ result.job_comparison.matching_skills|length | default(0) }})</h5>
+                            {% if result.job_comparison.matching_skills %}
+                                <div class="skill-tags">
+                                    {% for skill in result.job_comparison.matching_skills %}
+                                        <span class="badge bg-success-light text-success-dark">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-secondary">No matching keywords found.</p>
+                            {% endif %}
+                        </div>
+                        <hr>
+                        <div>
+                            <h5 class="text-warning"><i class="fas fa-lightbulb me-2"></i>Keywords to Add ({{ result.job_comparison.missing_skills|length | default(0) }})</h5>
+                            {% if result.job_comparison.missing_skills %}
+                                <div class="skill-tags">
+                                    {% for skill in result.job_comparison.missing_skills %}
+                                        <span class="badge bg-warning-light text-warning-dark">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-success small fw-bold mt-2">No missing keywords! Perfect match.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- GENERAL RESUME ANALYSIS (Always Shows) -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0"><i class="fas fa-chart-pie text-primary me-2"></i>General Resume Analysis</h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-lg-4 text-center mb-4 mb-lg-0">
+                        <div style="position: relative; width: 200px; height: 200px; margin: 0 auto;">
+                            <canvas id="atsScoreChart" width="200" height="200" data-score="{{ result.score | default(0) }}"></canvas>
+                        </div>
+                        <h5 class="mt-3">Overall ATS Score</h5>
+                        <p class="text-muted">{{ result.score | default(0) }}/100 points</p>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="mb-4">
+                            <h5><i class="fas fa-cogs me-2"></i>Detected Technical Skills ({{ result.skills.technical|length | default(0) }})</h5>
+                            {% if result.skills.technical %}
+                                <div class="skill-tags mb-3">
+                                    {% for skill in result.skills.technical %}
+                                        <span class="badge bg-secondary-light text-dark">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No technical skills detected.</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h5><i class="fas fa-comments me-2"></i>Detected Soft Skills ({{ result.skills.soft|length | default(0) }})</h5>
+                            {% if result.skills.soft %}
+                                <div class="skill-tags">
+                                    {% for skill in result.skills.soft %}
+                                        <span class="badge bg-secondary-light text-dark">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No soft skills detected.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-clipboard-list me-2"></i>Score Breakdown</h5>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="scoreBreakdownChart" data-breakdown='{{ result.score_breakdown | tojson | safe }}'></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-user-tie me-2"></i>Job Profile Match</h5>
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="jobProfileChart" data-profiles='{{ result.job_profile_matches | tojson | safe }}'></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <a href="/" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-upload me-2"></i>Analyze Another
+                </a>
+                <button id="coverLetterBtn" class="btn btn-success btn-lg me-3">
+                    <i class="fas fa-pen-alt me-2"></i>Draft Cover Letter
+                </button>
+                <button class="btn btn-outline-secondary btn-lg" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i>Print Results
+                </button>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- Failure Section -->
+        <div class="card text-center shadow-sm">
+            <div class="card-body p-5">
+                <i class="fas fa-exclamation-triangle fa-4x text-danger mb-3"></i>
+                <h2 class="card-title">Analysis Failed</h2>
+                <p class="text-muted fs-5"><strong>File:</strong> {{ result.filename or 'Unknown' }}</p>
+                <p class="lead">{{ result.error }}</p>
+                <a href="/" class="btn btn-primary mt-3">
+                    <i class="fas fa-arrow-left me-2"></i>Try Again
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Cover Letter Modal -->
+<div class="modal fade" id="coverLetterModal" tabindex="-1" aria-labelledby="coverLetterModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="coverLetterModalLabel">AI-Generated Cover Letter</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="coverLetterOutput" style="white-space: pre-line; background-color: #f8f9fa; padding: 1.5rem;">
+        <div class="text-center p-5" id="coverLetterSpinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Drafting your cover letter...</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" id="copyCoverLetterBtn"><i class="fas fa-copy me-2"></i>Copy Text</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Data Script for JavaScript -->
+{% if result.success %}
+<script type="application/json" id="analysisJsonData">
+{
+    "resumeText": {{ result.get("full_text", "") | tojson | safe }},
+    "jdText": {{ (result.get("job_comparison", {}).get("jd_text", "") if result.get("job_comparison") else "") | tojson | safe }}
+}
+</script>
+{% endif %}
+
+<style>
+.skill-tags .badge { 
+    padding: 0.6em 1em; 
+    margin: 0.25em; 
+    font-size: 0.9rem; 
+    font-weight: 500; 
+    border: 1px solid transparent; 
+}
+.bg-success-light { 
+    background-color: #d1e7dd; 
+    border-color: #a3cfbb; 
+}
+.text-success-dark { 
+    color: #0a3622 !important; 
+}
+.bg-warning-light { 
+    background-color: #fff3cd; 
+    border-color: #ffde68; 
+}
+.text-warning-dark { 
+    color: #664d03 !important; 
+}
+.bg-secondary-light { 
+    background-color: #f8f9fa; 
+    border-color: #dee2e6; 
+}
+.ai-feedback-box { 
+    background-color: #f8f9fa; 
+    border-left: 4px solid #0d6efd; 
+    padding: 1rem 1.5rem; 
+    border-radius: 0.25rem; 
+}
+@media print { 
+    .btn { 
+        display: none !important; 
+    } 
+}
+</style>
+
+{% if result.success %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    // --- COVER LETTER MODAL LOGIC ---
+    const coverLetterBtn = document.getElementById('coverLetterBtn');
+    if (coverLetterBtn) {
+        const jsonDataElement = document.getElementById('analysisJsonData');
+        if (jsonDataElement) {
+            let analysisData;
+            try {
+                analysisData = JSON.parse(jsonDataElement.textContent);
+            } catch (e) {
+                console.error('Failed to parse analysis data:', e);
+                return;
+            }
+
+            coverLetterBtn.addEventListener('click', async () => {
+                const modal = new bootstrap.Modal(document.getElementById('coverLetterModal'));
+                const outputDiv = document.getElementById('coverLetterOutput');
+                const spinner = document.getElementById('coverLetterSpinner');
+
+                outputDiv.innerHTML = spinner.outerHTML;
+                modal.show();
+
+                try {
+                    const response = await fetch('/generate-cover-letter', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            resume_text: analysisData.resumeText || '',
+                            jd_text: analysisData.jdText || ''
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ error: 'Server returned a non-JSON error response.' }));
+                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    if (data.success) {
+                        outputDiv.textContent = data.cover_letter;
+                    } else {
+                        outputDiv.textContent = 'Error: ' + (data.error || 'Unknown error');
+                    }
+                } catch (error) {
+                    outputDiv.textContent = 'An error occurred: ' + error.message;
+                    console.error('Cover letter generation error:', error);
+                }
+            });
+        }
+    }
+
+    const copyCoverLetterBtn = document.getElementById('copyCoverLetterBtn');
+    if (copyCoverLetterBtn) {
+        copyCoverLetterBtn.addEventListener('click', () => {
+            const textToCopy = document.getElementById('coverLetterOutput').textContent;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert('Copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    fallbackCopyTextToClipboard(textToCopy);
+                });
+            } else {
+                fallbackCopyTextToClipboard(textToCopy);
+            }
+        });
+    }
+
+    function fallbackCopyTextToClipboard(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
+        } catch (err) {
+            console.error('Fallback: Oops, unable to copy', err);
+        }
+        document.body.removeChild(textArea);
+    }
+
+    // --- CHART.JS LOGIC ---
+    const doughnutTextPlugin = {
+        id: 'doughnutText',
+        afterDraw(chart) {
+            const { ctx, width, height } = chart;
+            ctx.restore();
+            const score = chart.data.datasets[0].data[0] || 0;
+            const fontSize = Math.max(12, (height / 114) * 16);
+            ctx.font = `bold ${fontSize}px sans-serif`;
+            ctx.textBaseline = 'middle';
+            ctx.textAlign = 'center';
+            const text = `${score}%`;
+            const textX = width / 2;
+            const textY = height / 2;
+            ctx.fillStyle = '#333';
+            ctx.fillText(text, textX, textY);
+            ctx.save();
+        }
+    };
+
+    const chartOptions = {
+        animation: { duration: 1000 },
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } }
+    };
+
+    // Job Match Score Chart
+    const matchScoreCanvas = document.getElementById('matchScoreChart');
+    if (matchScoreCanvas) {
+        const score = parseInt(matchScoreCanvas.dataset.score) || 0;
+        new Chart(matchScoreCanvas.getContext('2d'), {
+            type: 'doughnut',
+            data: { 
+                datasets: [{ 
+                    data: [score, 100 - score], 
+                    backgroundColor: ['#0d6efd', '#e9ecef'], 
+                    borderWidth: 0 
+                }] 
+            },
+            options: { ...chartOptions, cutout: '70%' },
+            plugins: [doughnutTextPlugin]
+        });
+    }
+
+    // ATS Score Chart
+    const atsScoreCanvas = document.getElementById('atsScoreChart');
+    if (atsScoreCanvas) {
+        const score = parseInt(atsScoreCanvas.dataset.score) || 0;
+        let color = '#dc3545';
+        if (score >= 80) color = '#198754';
+        else if (score >= 60) color = '#ffc107';
+        
+        new Chart(atsScoreCanvas.getContext('2d'), {
+            type: 'doughnut',
+            data: { 
+                datasets: [{ 
+                    data: [score, 100 - score], 
+                    backgroundColor: [color, '#e9ecef'], 
+                    borderWidth: 0 
+                }] 
+            },
+            options: { ...chartOptions, cutout: '70%' },
+            plugins: [doughnutTextPlugin]
+        });
+    }
+
+    // Score Breakdown Chart
+    const scoreBreakdownCanvas = document.getElementById('scoreBreakdownChart');
+    if (scoreBreakdownCanvas) {
+        try {
+            const breakdownData = JSON.parse(scoreBreakdownCanvas.dataset.breakdown);
+            if (breakdownData && Object.keys(breakdownData).length > 0) {
+                new Chart(scoreBreakdownCanvas.getContext('2d'), {
+                    type: 'radar',
+                    data: {
+                        labels: Object.keys(breakdownData),
+                        datasets: [{
+                            label: 'Score', 
+                            data: Object.values(breakdownData), 
+                            fill: true,
+                            backgroundColor: 'rgba(13, 110, 253, 0.2)', 
+                            borderColor: 'rgb(13, 110, 253)',
+                            pointBackgroundColor: 'rgb(13, 110, 253)', 
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff', 
+                            pointHoverBorderColor: 'rgb(13, 110, 253)'
+                        }]
+                    },
+                    options: {
+                        animation: { duration: 1000 }, 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { r: { beginAtZero: true, max: 25, ticks: { stepSize: 5 } } }
+                    }
+                });
+            }
+        } catch (e) { 
+            console.error("Could not parse score breakdown data:", e); 
+        }
+    }
+
+    // Job Profile Chart
+    const jobProfileCanvas = document.getElementById('jobProfileChart');
+    if (jobProfileCanvas) {
+        try {
+            const profileData = JSON.parse(jobProfileCanvas.dataset.profiles);
+            if (profileData && Object.keys(profileData).length > 0) {
+                new Chart(jobProfileCanvas.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(profileData),
+                        datasets: [{
+                            label: 'Match %', 
+                            data: Object.values(profileData),
+                            backgroundColor: ['#6c757d', '#fd7e14', '#ffc107', '#0d6efd'],
+                            borderRadius: 5, 
+                            borderSkipped: false,
+                        }]
+                    },
+                    options: {
+                        animation: { duration: 1000 }, 
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        indexAxis: 'y',
+                        plugins: { 
+                            legend: { display: false }, 
+                            tooltip: { 
+                                callbacks: { 
+                                    label: (context) => context.parsed.x + '%' 
+                                } 
+                            } 
+                        },
+                        scales: { 
+                            x: { 
+                                beginAtZero: true, 
+                                max: 100, 
+                                ticks: { 
+                                    callback: (value) => value + '%' 
+                                } 
+                            }, 
+                            y: { 
+                                ticks: { 
+                                    font: { size: 12 } 
+                                } 
+                            } 
+                        }
+                    }
+                });
+            }
+        } catch (e) { 
+            console.error("Could not parse job profile data:", e); 
+        }
+    }
+});
+</script>
+{% endif %}
+{% endblock %}
