@@ -32,7 +32,7 @@ AI & Machine Learning: Hugging Face Inference API to interact with the mistralai
 
 Frontend: HTML5, CSS3, and JavaScript, styled with Bootstrap 5.
 
-Data Visualization: Chart.js for interactive and responsive charts.
+Data Visualization:Plotly for interactive and responsive charts.
 
 File Parsing:
 
