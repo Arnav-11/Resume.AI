@@ -81,6 +81,4 @@ The system retrieves the most relevant resume sections before sending context to
 ### Frontend
 - HTML
 - CSS
-- Jinja Templates
-
 ---
