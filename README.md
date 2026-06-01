@@ -72,7 +72,6 @@ The system retrieves the most relevant resume sections before sending context to
 - LangChain
 - ChromaDB
 - Sentence Transformers
-- Custom TF-IDF Fallback Embeddings
 
 ### Document Processing
 - PyPDF2
