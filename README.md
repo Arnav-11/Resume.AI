@@ -65,7 +65,6 @@ The system retrieves the most relevant resume sections before sending context to
 - Python
 
 ### AI / LLM
-- Mistral-7B-Instruct
 - Hugging Face Inference API
 
 ### RAG Pipeline
